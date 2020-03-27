@@ -25,6 +25,9 @@
 	var barrierArray = [];
 	var blockArray = [];
 	
+	var angles = [0.5, 1, 2];
+	
+	
 	window.onload = function() {
 	canvas = document.getElementById("canvas");	
 	ctx = canvas.getContext("2d");
@@ -33,6 +36,9 @@
 	ctx.imageSmoothingEnabled = false;
 	document.addEventListener('keydown', keydown);
 	document.addEventListener('keyup', keyup);
+	
+	placeBlocks();
+	
 	setInterval(main, 100/6);
 	}
 	
@@ -90,6 +96,21 @@
 		pushed.y -= (delta + DELTA_CHANGE);
 	}
 	return flags;
+	}
+	
+	function randIntInRange(min, max) {
+	///@return a random integer value between min and max inclusively.
+	if (min > max) {
+		var temp = min;
+		min = max;
+		max = temp;
+	}
+	return Math.round(Math.random() * (max - min)) + min;
+	}
+
+	function randFromList(a) { 
+		///@return a random item in a list by picking one of its valid indexes randomly
+		return a[randIntInRange(0, a.length - 1)];
 	}
 	
 	class Rectangle {
@@ -152,14 +173,33 @@
 	class ball extends Rectangle{
 		constructor(x,y,w,h,c) {
 			super(x,y,w,h,c);
-			this.dx = 5;
-			this.dy = 5;
+			this.dx = 0;
+			this.dy = 0;
 			this.score = 0;
+			this.play = false;
 
 		}
 		update() {
 			this.y += this.dy;
 			this.x += this.dx;
+			
+			if(player.left)
+				this.play = true;
+				
+			if(player.right)
+				this.play = true;
+			
+			if(this.play == true && this.dx == 0)
+			{
+				this.dx = 5;
+				this.dy = 5;
+			}
+			
+			if(this.y > window.innerHeight)  //reset the game
+			{
+				resetGame();
+			}
+			
 			for (var i = 0; i < barrierArray.length; i++) {
 				if (checkCollision(this, barrierArray[i])){
 					var direct = eject(this, barrierArray[i]);
@@ -177,13 +217,32 @@
 						this.dy *= -1;
 					}
 					else if(direct[3]){
-						this.dy *= -1;
+					
+						angle = randFromList(angles);
+						if(this.x <= barrierArray[i].x)
+						{
+							
+							this.dy *= -1 / angle;
+							if(this.dx > 0)
+							{
+								this.dx *= -angle;
+							}
+						}
+						else if(this.x > barrierArray[i].x)
+						{
+							this.dy *= -1 / angle;
+							if(this.dx < 0)
+							{
+								this.dx *= -angle;
+							}
+						}
 					}
 
 				}
 			}	
 			for (var i = 0; i < blockArray.length; i++){
 				if(checkCollision(this, blockArray[i])){
+					
 					
 					
 					var direct = eject(this, blockArray[i]);
@@ -204,6 +263,16 @@
 					}
 					blockArray.splice(i,1);
 					this.score += 4;
+					
+					if(blockArray.length == 0)
+					{
+						if (counter >= 300)
+						{
+							resetGame();
+							counter = 0;
+						}
+						
+					}
 				}
 			}
 			
@@ -221,37 +290,76 @@
 			ctx.fill();
 			
 			ctx.font = "30px Montserrat"; 
-			ctx.fillText(this.score, window.innerWidth/1.05, window.innerHeight/10);
+			ctx.fillText(this.score, window.innerWidth/1.2, window.innerHeight/10);
+			
+			if(blockArray.length == 0)
+			{
+				counter += 1;
+				ctx.font = "30px MontSerrat";
+				ctx.fillText("You won with a score of " + this.score, window.innerWidth/55, window.innerHeight / 60);	
+			}
 		}
 	}
 	
-	player = new Player(window.innerWidth/2 - 50, window.innerHeight - 50, window.innerWidth/6, 10, "#FFFFFF");
-	theBall = new ball(window.innerWidth/2 - 50, window.innerHeight - 200, 25, 25, "#FFFFFF");
+	player = new Player(window.innerWidth/2 - 50, window.innerHeight - 50, window.innerWidth/6, window.innerHeight/75, "#FFFFFF");
+	theBall = new ball(window.innerWidth/2 - 50, window.innerHeight/2, 25, 25, "#FFFFFF");
 	//barriers
-	var topWall = new Rectangle(innerWidth/2, 10, window.innerWidth, 20);	//upper border
-	var leftWall = new Rectangle(10, innerHeight/2, 20,window.innerHeight);	//left border
-	var rightWall = new Rectangle(window.innerWidth - 10, innerHeight/2, 20, window.innerHeight);	//right border
+	var topWall = new Rectangle(innerWidth/2, 10, window.innerWidth, window.innerHeight/40);	//upper border
+	var leftWall = new Rectangle(10, innerHeight/2, window.innerWidth/55 ,window.innerHeight);	//left border
+	var rightWall = new Rectangle(window.innerWidth - 10, innerHeight/2, window.innerWidth/55, window.innerHeight);	//right border
 	var bottomWall = new Rectangle(window.innerWidth/2, window.innerHeight - 20, window.innerWidth - 20, 20);	//lower border
 	//var block1 = new Block(window.innerWidth/5, window.innerHeight/4, window.innerWidth/30, window.innerHeight/20, "#FFFFFF");
 	//var block2 = new Block(window.innerWidth/4, window.innerHeight/4, window.innerWidth/30, window.innerHeight/20, "#FFFFFF");
 	//var block3 = new Block(window.innerWidth/4 + 100, window.innerHeight/4, window.innerWidth/30, window.innerHeight/20, "#FFFFFF");
+	var xChange = innerWidth/20;
+	var counter = 0;
+	var angle = 1;
 	
-	for(var i = 0; i < 3; i++)
-	{
-		var xChange = 5;
-		var yChange = 4;
+	
+	
+	function placeBlocks() {
+		for(var i = 0; i < 14; i++)
+		{
+			var block = new Block(window.innerWidth - xChange,
+								window.innerHeight/4,
+								window.innerWidth / 22,
+								window.innerHeight/20,
+								"#FFFFFF");
+			xChange += window.innerWidth/14.5;					
+			blockArray.push(block);
+		}
 		
+		xChange = innerWidth/20;
 		
-		var block = new Block(window.innerWidth/xChange,
-							window.innerHeight/yChange,
-							window.innerWidth / 30,
-							window.innerHeight/20,
-							"#FFFFFF");
-		blockArray.push(block);
-		xChange -= 1;
-		console.log(blockArray);
-		
+		for(var j = 0; j < 14; j++)
+		{
+			var block = new Block(window.innerWidth - xChange,
+								window.innerHeight/3,
+								window.innerWidth / 22,
+								window.innerHeight/20,
+								"#FFFFFF");
+			xChange += window.innerWidth/14.5;					
+			blockArray.push(block);
+		}
 	}
+	
+	function resetGame() {
+		
+		theBall.x = window.innerWidth/2 - 50;
+		theBall.y = window.innerHeight/2;
+		theBall.dx = 0;
+		theBall.dy = 0;
+		theBall.play = false;
+			
+		player.x = window.innerWidth/2 - 50;
+		theBall.score = 0;
+		
+		xChange = innerWidth/25;
+		blockArray = [];
+				
+		placeBlocks();
+	}
+	
 	
 	barrierArray.push(topWall);
 	barrierArray.push(leftWall);
