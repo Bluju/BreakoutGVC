@@ -1,0 +1,313 @@
+<html>
+<title>Breakout</title>
+<head>
+	<style>
+		
+		
+	</style>
+</head>
+
+<body style= "margin: 0">
+	<canvas id = "canvas" width="0" height="0"></canvas>
+	<script> 
+	
+	//TODO
+	/*
+	
+		* create an array that creates a set amount of blocks
+		* create an array of fast food brand logos and assign them to the blocks as they are created 
+		* create a scene manager  /pressStart/game/win/lose
+		
+	*/
+	
+	//var playerArray = [];
+	var ballArray = [];
+	var barrierArray = [];
+	var blockArray = [];
+	
+	window.onload = function() {
+	canvas = document.getElementById("canvas");	
+	ctx = canvas.getContext("2d");
+	canvas.width = innerWidth;
+	canvas.height = innerHeight;
+	ctx.imageSmoothingEnabled = false;
+	document.addEventListener('keydown', keydown);
+	document.addEventListener('keyup', keyup);
+	setInterval(main, 100/6);
+	}
+	
+	function checkCollision(rect1, rect2) {
+	return  (checkCollisionX(rect1, rect2) && checkCollisionY(rect1, rect2));
+	}
+	function checkCollisionX(rect1, rect2) {	//takes the x-component of checkCollision
+	return  (rect1.x - rect1.w/2 < rect2.x + rect2.w/2 &&
+			rect1.x + rect1.w/2 > rect2.x - rect2.w/2);
+	}
+	function checkCollisionY(rect1, rect2) {	//takes the y-component of checkCollision
+	return (rect1.y - rect1.h/2 < rect2.y + rect2.h/2 &&
+			rect1.y + rect1.h/2 > rect2.y - rect2.h/2);
+	}
+	
+	function eject(pushed, pusher) {
+
+	const DELTA_CHANGE = 0.01
+	var delta = 0;
+	var flags = [false, false, false, false];
+	const PREV_X = pushed.x;
+	const PREV_Y = pushed.y;
+	if (!checkCollision(pushed, pusher)) { return flags; }
+
+	do {
+		delta += DELTA_CHANGE;
+		pushed.x += delta;
+		if (!checkCollision(pushed, pusher)){
+			flags[0] = true;
+		}
+		pushed.x -= 2*delta;
+		if (!checkCollision(pushed, pusher)){
+			flags[1] = true;
+		}
+		pushed.x = PREV_X;
+		pushed.y += delta;
+		if (!checkCollision(pushed, pusher)){
+			flags[2] = true;
+		}
+		pushed.y -= 2*delta;
+		if (!checkCollision(pushed, pusher)){
+			flags[3] = true;
+		}
+		pushed.y = PREV_Y;
+	} while (!flags[0] && !flags[1] && !flags[2] && !flags[3]);
+
+	if (flags[0]) {
+		pushed.x += (delta + DELTA_CHANGE);
+	} else if (flags[1]) {
+		pushed.x -= (delta + DELTA_CHANGE);
+	}
+	if (flags[2]) {
+		pushed.y += (delta + DELTA_CHANGE);
+	} else if (flags[3]) {
+		pushed.y -= (delta + DELTA_CHANGE);
+	}
+	return flags;
+	}
+	
+	class Rectangle {
+		constructor(x,y,w,h,c) {
+			this.x = x;
+			this.y = y;
+			this.w = w;
+			this.h = h;
+			this.c = c; //Color
+		
+		}
+		update(){	
+			ctx.fillStyle = this.c;
+			this.render();
+		}
+		
+		render(){
+			ctx.fillRect(this.x-this.w/2, this.y-this.h/2, this.w, this.h, this.c);
+		}
+	
+	}
+	
+	class Block extends Rectangle {
+		constructor(x,y,w,h,c) {
+			super(x,y,w,h,c);
+		}
+		update(){
+			ctx.fillStyle = this.c;
+			this.render();
+		}
+		render(){
+			ctx.fillRect(this.x-this.w/2, this.y-this.h/2, this.w, this.h, this.c);
+			
+			//Create an array of fast food brand logos and choose them in the order that the blocks are drawn
+		}
+		
+	
+	}
+	class Player extends Rectangle {
+		constructor(x,y,w,h,c) {
+		super(x,y,w,h,c);
+		
+		
+		}
+		update(){
+			if(this.left)
+				this.x -= 4;
+			if(this.right)
+				this.x += 4;
+				
+			eject(this, leftWall);
+			eject(this, rightWall);
+
+			
+			ctx.fillStyle = this.c;
+			this.render();
+		}
+	}
+	
+	class ball extends Rectangle{
+		constructor(x,y,w,h,c) {
+			super(x,y,w,h,c);
+			this.dx = 5;
+			this.dy = 5;
+			this.score = 0;
+
+		}
+		update() {
+			this.y += this.dy;
+			this.x += this.dx;
+			for (var i = 0; i < barrierArray.length; i++) {
+				if (checkCollision(this, barrierArray[i])){
+					var direct = eject(this, barrierArray[i]);
+					/*Checks to see whether the ball entered the wall horizontally and/or vertically, and changes
+					its orientation appropriately*/
+					if (direct[0]){ //horizontal
+						this.dx *= -1;
+						
+					}
+					else if(direct[1]){
+						this.dx *= -1
+					}
+
+					if (direct[2]){ //vertical
+						this.dy *= -1;
+					}
+					else if(direct[3]){
+						this.dy *= -1;
+					}
+
+				}
+			}	
+			for (var i = 0; i < blockArray.length; i++){
+				if(checkCollision(this, blockArray[i])){
+					
+					
+					var direct = eject(this, blockArray[i]);
+					/*Checks to see whether the ball entered the wall horizontally and/or vertically, and changes
+					its orientation appropriately*/
+					if (direct[0]){ //horizontal
+						this.dx *= -1;
+					}
+					else if(direct[1]){
+						this.dx *= -1
+					}
+
+					if (direct[2]){ //vertical
+						this.dy *= -1;
+					}
+					else if(direct[3]){
+						this.dy *= -1;
+					}
+					blockArray.splice(i,1);
+					this.score += 4;
+				}
+			}
+			
+			
+		
+			
+			
+			ctx.fillStyle = this.c;
+			this.render();
+		}
+		render() {
+			ctx.beginPath();
+			ctx.arc(this.x, this.y, this.w/2, 0, 2*Math.PI);
+			ctx.closePath();
+			ctx.fill();
+			
+			ctx.font = "30px Montserrat"; 
+			ctx.fillText(this.score, window.innerWidth/1.05, window.innerHeight/10);
+		}
+	}
+	
+	player = new Player(window.innerWidth/2 - 50, window.innerHeight - 50, window.innerWidth/6, 10, "#FFFFFF");
+	theBall = new ball(window.innerWidth/2 - 50, window.innerHeight - 200, 25, 25, "#FFFFFF");
+	//barriers
+	var topWall = new Rectangle(innerWidth/2, 10, window.innerWidth, 20);	//upper border
+	var leftWall = new Rectangle(10, innerHeight/2, 20,window.innerHeight);	//left border
+	var rightWall = new Rectangle(window.innerWidth - 10, innerHeight/2, 20, window.innerHeight);	//right border
+	var bottomWall = new Rectangle(window.innerWidth/2, window.innerHeight - 20, window.innerWidth - 20, 20);	//lower border
+	//var block1 = new Block(window.innerWidth/5, window.innerHeight/4, window.innerWidth/30, window.innerHeight/20, "#FFFFFF");
+	//var block2 = new Block(window.innerWidth/4, window.innerHeight/4, window.innerWidth/30, window.innerHeight/20, "#FFFFFF");
+	//var block3 = new Block(window.innerWidth/4 + 100, window.innerHeight/4, window.innerWidth/30, window.innerHeight/20, "#FFFFFF");
+	
+	for(var i = 0; i < 3; i++)
+	{
+		var xChange = 5;
+		var yChange = 4;
+		
+		
+		var block = new Block(window.innerWidth/xChange,
+							window.innerHeight/yChange,
+							window.innerWidth / 30,
+							window.innerHeight/20,
+							"#FFFFFF");
+		blockArray.push(block);
+		xChange -= 1;
+		console.log(blockArray);
+		
+	}
+	
+	barrierArray.push(topWall);
+	barrierArray.push(leftWall);
+	barrierArray.push(rightWall);
+	//barrierArray.push(bottomWall);
+	ballArray.push(theBall);
+	barrierArray.push(player);
+	
+	
+	
+	function keydown(e) {
+	switch(e.keyCode){
+		case 37:
+			player.left = true;
+			break;
+		case 39:
+			player.right = true;
+			break;
+	
+		}
+	}
+	
+	function keyup(e) {
+		switch(e.keyCode){
+		case 37:
+			player.left = false;
+			break;
+		case 39:
+			player.right = false;
+			break;
+		}
+	}
+	
+	function main() {
+		canvas.width = window.innerWidth;
+		canvas.height = window.innerHeight;
+		 
+		ctx.fillStyle = "#333333";
+		ctx.fillRect(0,0, window.innerWidth, window.innerHeight);
+		
+		
+		
+		
+		 
+		player.update();
+		theBall.update();
+		for (var i = 0; i < barrierArray.length; i++){
+			barrierArray[i].update();
+		}
+		for (var i = 0; i < blockArray.length; i++){
+			blockArray[i].update();
+		}
+		
+	}
+	
+	
+	</script>
+</body>
+</html>
