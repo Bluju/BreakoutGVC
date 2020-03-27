@@ -184,6 +184,47 @@
 	
 	}
 	
+	class PapaBlock extends Block {
+		constructor(x,y,w,h,c){
+		super(x,y,w,h,c);
+		
+		this.background = new Image();
+		this.background.src = "PapaJohns.png";
+		
+		}
+		
+		update(){
+			ctx.fillStyle = this.c;
+			this.render();
+		}
+		
+		render(){
+			ctx.fillRect(this.x-this.w/2, this.y-this.h/2, this.w, this.h, this.c);
+			ctx.drawImage(this.background, this.x - this.w/2, this.y-this.h/2, this.w, this.h);
+			
+		}
+	}
+	class KingBlock extends Block {
+		constructor(x,y,w,h,c){
+		super(x,y,w,h,c);
+		
+		this.background = new Image();
+		this.background.src = "PapaJohns.png";
+		
+		}
+		
+		update(){
+			ctx.fillStyle = this.c;
+			this.render();
+		}
+		
+		render(){
+			ctx.fillRect(this.x-this.w/2, this.y-this.h/2, this.w, this.h, this.c);
+			ctx.drawImage(this.background, this.x - this.w/2, this.y-this.h/2, this.w, this.h);
+			
+		}
+	}
+	
 	class Player extends Rectangle {
 		constructor(x,y,w,h,c) {
 		super(x,y,w,h,c);
@@ -347,6 +388,20 @@
 	
 	
 	function placeBlocks() {
+		
+		for(var m = 0; m < 14; m++)
+		{
+			var block = new KingBlock(window.innerWidth - xChange,
+								window.innerHeight/6,
+								window.innerWidth/22,
+								window.innerHeight/20,
+								"#FFFFFF");
+			xChange += window.innerWidth/14.5;					
+			blockArray.push(block);
+		}
+		
+		xChange = innerWidth/20;
+		
 		for(var i = 0; i < 14; i++)
 		{
 			
@@ -386,12 +441,27 @@
 			blockArray.push(block);
 		}
 		
+		xChange = innerWidth/20;
+		
+		for(var l = 0; l < 14; l++)
+		{
+			var block = new PapaBlock(window.innerWidth - xChange,
+								window.innerHeight/2,
+								window.innerWidth/22,
+								window.innerHeight/20,
+								"#FFFFFF");
+			xChange += window.innerWidth/14.5;					
+			blockArray.push(block);
+		}
+		
+		
+		
 	}
 	
 	function resetGame() {
 		
 		theBall.x = window.innerWidth/2 - 50;
-		theBall.y = window.innerHeight/2;
+		theBall.y = window.innerHeight/1.5;
 		theBall.dx = 0;
 		theBall.dy = 0;
 		theBall.play = false;
